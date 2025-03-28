@@ -1,14 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Code2, Terminal, Blocks, Send, Github, Linkedin, ExternalLink, ArrowRight, Circle, Gamepad2, Network } from 'lucide-react';
-import { Terminal as TerminalComponent } from './components/Terminal';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Code2,
+  Terminal,
+  Blocks,
+  Send,
+  Github,
+  Linkedin,
+  ArrowRight,
+  Circle,
+  Gamepad2,
+  Network,
+} from "lucide-react";
+import { Terminal as TerminalComponent } from "./components/Terminal";
+import { ProjectDetail } from "./components/ProjectDetail";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 
 // Animation variants for page transitions
 const pageVariants = {
   initial: (direction: number) => ({
     x: direction > 0 ? 500 : -500,
     opacity: 0,
-    scale: 0.9
+    scale: 0.9,
   }),
   animate: {
     x: 0,
@@ -19,8 +39,8 @@ const pageVariants = {
       stiffness: 300,
       damping: 30,
       mass: 0.5,
-      duration: 0.3
-    }
+      duration: 0.3,
+    },
   },
   exit: (direction: number) => ({
     x: direction > 0 ? -500 : 500,
@@ -31,47 +51,59 @@ const pageVariants = {
       stiffness: 300,
       damping: 30,
       mass: 0.5,
-      duration: 0.3
-    }
-  })
+      duration: 0.3,
+    },
+  }),
 };
 
-function TypewriterText({ text, delay = 50 }: { text: string; delay?: number }) {
-  const [displayText, setDisplayText] = useState('');
-  
+function TypewriterText({
+  text,
+  delay = 50,
+}: {
+  text: string;
+  delay?: number;
+}) {
+  const [displayText, setDisplayText] = useState("");
+
   useEffect(() => {
-    setDisplayText(''); // Reset text when input changes
+    setDisplayText(""); // Reset text when input changes
     let currentIndex = 0;
     const timer = setInterval(() => {
       if (currentIndex < text.length) {
-        setDisplayText(prev => text.slice(0, currentIndex + 1));
+        setDisplayText((prev) => text.slice(0, currentIndex + 1));
         currentIndex++;
       } else {
         clearInterval(timer);
       }
     }, delay);
-    
+
     return () => clearInterval(timer);
   }, [text, delay]);
 
   return <span>{displayText}</span>;
 }
 
-function CyclingTypewriter({ texts, delay = 2000 }: { texts: string[]; delay?: number }) {
+function CyclingTypewriter({
+  texts,
+  delay = 2000,
+}: {
+  texts: string[];
+  delay?: number;
+}) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [displayText, setDisplayText] = useState('');
+  const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    
+    let timeout: ReturnType<typeof setTimeout>;
+
     if (isDeleting) {
-      if (displayText === '') {
+      if (displayText === "") {
         setIsDeleting(false);
-        setCurrentIndex((prev) => (prev + 1) % texts.length);
+        setCurrentIndex((current) => (current + 1) % texts.length);
       } else {
         timeout = setTimeout(() => {
-          setDisplayText(prev => prev.slice(0, -1));
+          setDisplayText(displayText.slice(0, -1));
         }, 50);
       }
     } else {
@@ -99,21 +131,92 @@ function CyclingTypewriter({ texts, delay = 2000 }: { texts: string[]; delay?: n
   );
 }
 
-function App() {
-  const [activeSection, setActiveSection] = useState('about');
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isIntroVisible, setIsIntroVisible] = useState(true);
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
-  const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
-  const [direction, setDirection] = useState(0);
+const projects = [
+  {
+    id: "project-b",
+    title: "Project-B",
+    description: "A console-based C# restaurant reservation system",
+    icon: <Terminal className="w-20 h-20 text-zinc-400" />,
+    tech: ["C#", ".NET", "Console Application"],
+    link: "https://github.com/TomvGenderen/Project-B",
+    detailedDescription:
+      "A comprehensive restaurant reservation system built in C# that handles bookings, table management, and customer information.",
+    features: [
+      "Table management system",
+      "Customer booking interface",
+      "Reservation scheduling",
+      "Admin dashboard",
+    ],
+    images: [],
+  },
+  {
+    id: "project-alpha",
+    title: "Project-Alpha",
+    description: "A console-based C# text adventure game",
+    icon: <Gamepad2 className="w-20 h-20 text-zinc-400" />,
+    tech: ["C#", ".NET", "Console Application"],
+    link: "https://github.com/TomvGenderen/projectAlpha",
+    detailedDescription:
+      "An engaging text-based adventure game created in C# that features multiple storylines and player choices.",
+    features: [
+      "Multiple story paths",
+      "Character progression",
+      "Interactive dialogue system",
+      "Save/Load functionality",
+    ],
+    images: [],
+  },
+  {
+    id: "udp-client",
+    title: "UDPClient",
+    description: "A UDP client and server implementation in C#",
+    icon: <Network className="w-20 h-20 text-zinc-400" />,
+    tech: ["C#", ".NET", "UDP", "Networking"],
+    link: "https://github.com/TomvGenderen/UDPClient",
+    detailedDescription:
+      "A networking project that implements UDP protocol for client-server communication in C#.",
+    features: [
+      "UDP protocol implementation",
+      "Client-server architecture",
+      "Real-time data transfer",
+      "Error handling",
+    ],
+    images: [],
+  },
+];
 
-  const sections = ['about', 'projects', 'contact'];
+function MainContent() {
+  const [activeSection, setActiveSection] = useState("about");
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isIntroVisible, setIsIntroVisible] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const [formStatus, setFormStatus] = useState<
+    "idle" | "sending" | "success" | "error"
+  >("idle");
+  const [direction, setDirection] = useState(0);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const sections = ["about", "projects", "contact"];
+
+  useEffect(() => {
+    const path = location.pathname.slice(1) || "about";
+    if (sections.includes(path)) {
+      setActiveSection(path);
+    }
+    setIsIntroVisible(path === "" || path === "about");
+  }, [location.pathname]);
 
   const handleSectionChange = (newSection: string) => {
     const currentIndex = sections.indexOf(activeSection);
     const newIndex = sections.indexOf(newSection);
     setDirection(newIndex > currentIndex ? 1 : -1);
     setActiveSection(newSection);
+    navigate(`/${newSection}`, { replace: true });
   };
 
   const skills = [
@@ -123,7 +226,7 @@ function App() {
     "JavaScript",
     "C#",
     "Python",
-    "Vite"
+    "Vite",
   ];
 
   useEffect(() => {
@@ -131,8 +234,8 @@ function App() {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   useEffect(() => {
@@ -145,60 +248,39 @@ function App() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormStatus('sending');
+    setFormStatus("sending");
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
-      if (!response.ok) throw new Error('Failed to send message');
+      if (!response.ok) throw new Error("Failed to send message");
 
-      setFormStatus('success');
-      setFormData({ name: '', email: '', message: '' });
+      setFormStatus("success");
+      setFormData({ name: "", email: "", message: "" });
 
       setTimeout(() => {
-        setFormStatus('idle');
+        setFormStatus("idle");
       }, 3000);
-    } catch (error) {
-      setFormStatus('error');
+    } catch {
+      setFormStatus("error");
       setTimeout(() => {
-        setFormStatus('idle');
+        setFormStatus("idle");
       }, 3000);
     }
   };
 
-  const projects = [
-    {
-      title: "Project-B",
-      description: "A console based C# restaurant reservation system",
-      icon: <Terminal className="w-20 h-20 text-zinc-400" />,
-      tech: ["C#", ".NET", "Console", "SQLite"],
-      link: "https://github.com/Zjoswaa/Project-B"
-    },
-    {
-      title: "Project-Alpha",
-      description: "A console based C# text adventure game",
-      icon: <Gamepad2 className="w-20 h-20 text-zinc-400" />,
-      tech: ["C#", ".NET", "Console", "Game Development"],
-      link: "https://github.com/Zjoswaa/Project-Alpha"
-    },
-    {
-      title: "UDPClient",
-      description: "A UDP client and server implementation in C#",
-      icon: <Network className="w-20 h-20 text-zinc-400" />,
-      tech: ["C#", ".NET", "UDP", "Networking"],
-      link: "https://github.com/TomvGenderen/UDPClient"
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-zinc-900 text-zinc-100 relative overflow-hidden">
+    <div className="min-h-screen bg-zinc-900 text-white relative overflow-hidden">
       <AnimatePresence>
         {isIntroVisible && (
           <motion.div
@@ -218,7 +300,7 @@ function App() {
         )}
       </AnimatePresence>
 
-      <div 
+      <div
         className="pointer-events-none absolute inset-0 opacity-30"
         style={{
           background: `radial-gradient(circle 400px at ${mousePosition.x}px ${mousePosition.y}px, rgba(255,255,255,0.1), transparent 40%)`,
@@ -230,18 +312,20 @@ function App() {
           <motion.button
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            onClick={() => handleSectionChange('about')}
+            onClick={() => handleSectionChange("about")}
             className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
           >
             <Terminal className="w-8 h-8" />
-            <span className="text-xl font-semibold tracking-tight">Tom.dev</span>
+            <span className="text-xl font-semibold tracking-tight">
+              Tom.dev
+            </span>
           </motion.button>
 
           <nav className="flex items-center space-x-8">
             {[
-              { id: 'about', label: 'About', icon: Code2 },
-              { id: 'projects', label: 'Projects', icon: Blocks },
-              { id: 'contact', label: 'Contact', icon: Send }
+              { id: "about", label: "About", icon: Code2 },
+              { id: "projects", label: "Projects", icon: Blocks },
+              { id: "contact", label: "Contact", icon: Send },
             ].map(({ id, label, icon: Icon }) => (
               <motion.button
                 key={id}
@@ -249,9 +333,9 @@ function App() {
                 whileTap={{ y: 0 }}
                 onClick={() => handleSectionChange(id)}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-full transition-colors ${
-                  activeSection === id 
-                    ? 'bg-zinc-800 text-white' 
-                    : 'text-zinc-400 hover:text-white'
+                  activeSection === id
+                    ? "bg-zinc-800 text-white"
+                    : "text-zinc-400 hover:text-white"
                 }`}
               >
                 <Icon size={16} />
@@ -264,7 +348,7 @@ function App() {
 
       <main className="pt-32 pb-20 px-6 overflow-x-hidden">
         <AnimatePresence mode="wait" custom={direction}>
-          {activeSection === 'about' && (
+          {activeSection === "about" && (
             <motion.div
               key="about"
               custom={direction}
@@ -275,7 +359,7 @@ function App() {
               className="container mx-auto"
             >
               <div className="max-w-4xl mx-auto">
-                <motion.div 
+                <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   className="mb-12"
@@ -283,11 +367,14 @@ function App() {
                   <h1 className="text-7xl font-bold mb-4 tracking-tight">
                     Tom van Genderen
                     <br />
-                    <span className="text-zinc-500 text-4xl font-normal">Computer Science Student</span>
+                    <span className="text-zinc-500 text-4xl font-normal">
+                      Computer Science Student
+                    </span>
                   </h1>
                   <div className="text-xl leading-relaxed max-w-2xl space-y-4">
                     <p>
-                      I'm passionate about creating innovative solutions and learning new technologies.
+                      I'm passionate about creating innovative solutions and
+                      learning new technologies.
                     </p>
                     <p className="flex items-center space-x-2">
                       <span>Experience with</span>
@@ -296,7 +383,7 @@ function App() {
                   </div>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
@@ -337,11 +424,13 @@ function App() {
                     transition={{ delay: 0.3 }}
                     className="bg-zinc-800/50 backdrop-blur rounded-2xl p-8 border border-zinc-700/50"
                   >
-                    <h3 className="text-xl font-semibold mb-6">Technical Expertise</h3>
+                    <h3 className="text-xl font-semibold mb-6">
+                      Technical Expertise
+                    </h3>
                     <div className="grid grid-cols-2 gap-4">
                       {skills.map((skill) => (
-                        <motion.div 
-                          key={skill} 
+                        <motion.div
+                          key={skill}
                           className="flex items-center space-x-2"
                           whileHover={{ x: 5 }}
                           transition={{ type: "spring", stiffness: 300 }}
@@ -361,7 +450,7 @@ function App() {
                   >
                     <h3 className="text-xl font-semibold mb-6">Education</h3>
                     <div className="space-y-4">
-                      <motion.div 
+                      <motion.div
                         className="space-y-2"
                         whileHover={{ x: 5 }}
                         transition={{ type: "spring", stiffness: 300 }}
@@ -370,7 +459,9 @@ function App() {
                           <ArrowRight size={16} className="text-zinc-500" />
                           <span className="font-medium">Computer Science</span>
                         </div>
-                        <p className="text-sm text-zinc-400 pl-6">Currently Studying</p>
+                        <p className="text-sm text-zinc-400 pl-6">
+                          Currently Studying
+                        </p>
                       </motion.div>
                     </div>
                   </motion.div>
@@ -379,7 +470,7 @@ function App() {
             </motion.div>
           )}
 
-          {activeSection === 'projects' && (
+          {activeSection === "projects" && (
             <motion.div
               key="projects"
               custom={direction}
@@ -390,7 +481,7 @@ function App() {
               className="container mx-auto"
             >
               <div className="max-w-6xl mx-auto">
-                <h2 className="text-4xl font-bold mb-12">Selected Work</h2>
+                <h2 className="text-4xl font-bold mb-12">Finished Projects</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {projects.map((project, index) => (
                     <motion.div
@@ -405,28 +496,42 @@ function App() {
                         <div className="mb-6 transform group-hover:scale-110 transition-transform">
                           {project.icon}
                         </div>
-                        <h3 className="text-2xl font-semibold mb-2 text-center">{project.title}</h3>
-                        <p className="text-zinc-300 mb-4 text-center">{project.description}</p>
+                        <h3 className="text-2xl font-semibold mb-2 text-center">
+                          {project.title}
+                        </h3>
+                        <p className="text-zinc-300 mb-4 text-center">
+                          {project.description}
+                        </p>
                         <div className="flex flex-wrap gap-2 mb-4 justify-center">
                           {project.tech.map((tech) => (
-                            <span 
-                              key={tech} 
+                            <span
+                              key={tech}
                               className="px-3 py-1 bg-zinc-700/80 backdrop-blur-sm rounded-full text-sm"
                             >
                               {tech}
                             </span>
                           ))}
                         </div>
-                        <motion.a
-                          href={project.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          whileHover={{ x: 5 }}
-                          className="flex items-center space-x-2 text-zinc-300 hover:text-white transition-colors mt-auto"
-                        >
-                          <span>View on GitHub</span>
-                          <Github size={16} />
-                        </motion.a>
+                        <div className="flex space-x-4">
+                          <motion.a
+                            href={project.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            whileHover={{ x: 5 }}
+                            className="flex items-center space-x-2 text-zinc-300 hover:text-white transition-colors"
+                          >
+                            <span>View on GitHub</span>
+                            <Github size={16} />
+                          </motion.a>
+                          <motion.button
+                            onClick={() => navigate(`/projects/${project.id}`)}
+                            whileHover={{ x: 5 }}
+                            className="flex items-center space-x-2 text-zinc-300 hover:text-white transition-colors"
+                          >
+                            <span>Read more</span>
+                            <ArrowRight size={16} />
+                          </motion.button>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
@@ -435,7 +540,7 @@ function App() {
             </motion.div>
           )}
 
-          {activeSection === 'contact' && (
+          {activeSection === "contact" && (
             <motion.div
               key="contact"
               custom={direction}
@@ -454,7 +559,9 @@ function App() {
                       <input
                         type="text"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
                         required
                         className="w-full px-4 py-3 bg-zinc-700/50 border border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500"
                       />
@@ -464,39 +571,49 @@ function App() {
                       <input
                         type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
                         required
                         className="w-full px-4 py-3 bg-zinc-700/50 border border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-sm font-medium">Message</label>
+                      <label className="block text-sm font-medium">
+                        Message
+                      </label>
                       <textarea
                         rows={6}
                         value={formData.message}
-                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, message: e.target.value })
+                        }
                         required
                         className="w-full px-4 py-3 bg-zinc-700/50 border border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500"
                       ></textarea>
                     </div>
                     <motion.button
                       type="submit"
-                      disabled={formStatus === 'sending'}
+                      disabled={formStatus === "sending"}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className={`w-full py-4 rounded-lg font-medium transition-colors ${
-                        formStatus === 'sending'
-                          ? 'bg-zinc-600 cursor-not-allowed'
-                          : 'bg-zinc-700 hover:bg-zinc-600'
+                        formStatus === "sending"
+                          ? "bg-zinc-600 cursor-not-allowed"
+                          : "bg-zinc-700 hover:bg-zinc-600"
                       }`}
                     >
-                      {formStatus === 'sending' ? 'Sending...' : 'Send Message'}
+                      {formStatus === "sending" ? "Sending..." : "Send Message"}
                     </motion.button>
-                    {formStatus === 'success' && (
-                      <p className="text-green-500 text-center">Message sent successfully!</p>
+                    {formStatus === "success" && (
+                      <p className="text-green-500 text-center">
+                        Message sent successfully!
+                      </p>
                     )}
-                    {formStatus === 'error' && (
-                      <p className="text-red-500 text-center">Failed to send message. Please try again.</p>
+                    {formStatus === "error" && (
+                      <p className="text-red-500 text-center">
+                        Failed to send message. Please try again.
+                      </p>
                     )}
                   </form>
                 </div>
@@ -508,6 +625,24 @@ function App() {
 
       <TerminalComponent />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainContent />} />
+        <Route path="/about" element={<MainContent />} />
+        <Route path="/projects" element={<MainContent />} />
+        <Route path="/contact" element={<MainContent />} />
+        <Route
+          path="/projects/:projectId"
+          element={<ProjectDetail projects={projects} />}
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
